@@ -1,6 +1,8 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from api.rooms import router as rooms_router
+
 app = FastAPI()
 
 origins = [
@@ -15,6 +17,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+app.include_router(rooms_router)
 
 @app.get("/")
 def root():
