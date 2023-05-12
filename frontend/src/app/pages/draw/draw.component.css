@@ -12,4 +12,4 @@ canvas {
     padding: 10px;
     font-size: 12px;
     pointer-events: none; /* чтобы не мешать рисованию на canvas */
-  }
+}
