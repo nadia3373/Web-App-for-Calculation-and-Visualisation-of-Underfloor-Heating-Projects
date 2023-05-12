@@ -1,4 +1,5 @@
 import { Component, ElementRef, HostListener, ViewChild } from '@angular/core';
+import * as earcut from 'earcut';
 import { Layer } from '../draw/layer.model';
 import { Point } from '../draw/point.model';
 import { Room } from './room.model';
@@ -79,8 +80,8 @@ export class DrawComponent {
         this.cell = this.getCell(event.clientX, event.clientY);
         this.ctx.beginPath();
         // console.log(`coords: ${event.clientX}, ${event.clientY} start: ${(this.points[this.points.length - 1].x - 1) * 10}, ${(this.points[this.points.length - 1].y - 1) * 10} finish: ${(this.cell.x - 0.1) * 10}, ${(this.cell.y - 0.1) * 10}`);
-        this.ctx.moveTo((this.points[this.points.length - 1].x) * 100 + 5, (this.points[this.points.length - 1].y) * 100 + 5);
-        this.ctx.lineTo((this.cell.x) * 100 + 5, (this.cell.y) * 100 + 5);
+        this.ctx.moveTo((this.points[this.points.length - 1].x) * 100, (this.points[this.points.length - 1].y) * 100);
+        this.ctx.lineTo((this.cell.x) * 100, (this.cell.y) * 100);
         this.ctx.strokeStyle = 'green';
         this.ctx.lineWidth = 10;
         this.ctx.lineCap = "square";
@@ -97,6 +98,11 @@ export class DrawComponent {
       this.isDrawing = false;
       this.layers = [];
       this.locked = true;
+      const vertices: number[] = this.points.flatMap(point => [point.x, point.y]);
+      const triangles: number[][] = this.triangulatePolygon(vertices);
+      console.log(triangles);
+      this.room.area = this.roomService.calculateArea(this.points, triangles);
+      console.log(this.room.area);
       if (this.roomService.createRoom(this.points)) {
         this.roomService.saveRoom().subscribe({
           next: response => {
@@ -117,6 +123,7 @@ export class DrawComponent {
   }
 
   private getCell(x: number, y: number): Point {
+    console.log(`x: ${x} y: ${y} left: ${this.canvasRect.left} top: ${this.canvasRect.top}`);
     return new Point(Math.floor(Math.abs(this.canvasRect.left - x) / 10) / 10, Math.floor(Math.abs(this.canvasRect.top - y) / 10) / 10);
   }
 
@@ -158,4 +165,13 @@ export class DrawComponent {
     console.log(this.layers);
     this.ctx.restore();
   }
+
+  triangulatePolygon(vertices: number[]): number[][] {
+    const indices = earcut(vertices);
+    const triangles = [];
+    for (let i = 0; i < indices.length; i += 3) {
+      triangles.push([indices[i], indices[i + 1], indices[i + 2]]);
+    }
+    return triangles;
+  }  
 }
