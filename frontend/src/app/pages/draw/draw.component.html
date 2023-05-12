@@ -1,1 +1,4 @@
 <canvas #canvas></canvas>
+<div *ngIf="isDrawing" [style.left.px]="mousePosition.x" [style.top.px]="mousePosition.y" class="info">
+    <p>Some info here</p>
+</div>

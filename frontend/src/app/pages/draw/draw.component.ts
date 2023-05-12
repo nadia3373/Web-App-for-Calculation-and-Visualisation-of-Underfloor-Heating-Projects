@@ -7,18 +7,25 @@ import { RoomService } from 'src/app/services/room/room.service';
 
 @Component({
   selector: 'app-canvas',
-  template: `<canvas #canvas></canvas>`,
+  template: `<canvas #canvas></canvas>
+             <div *ngIf="drawingStatus" [style.left.px]="mouseCoordinates.x" [style.top.px]="mouseCoordinates.y" class="info">
+              <p>Angle: {{ drawingAngle }}</p>
+              <p>Distance: {{ drawingDistance }}</p>
+             </div>`,
   styleUrls: ['./draw.component.css']
 })
 export class DrawComponent {
   @ViewChild('canvas', { static: true })
   canvas!: ElementRef<HTMLCanvasElement>;
+  private angle: number = 0;
   private canvasRect!: DOMRect;
   private cell: Point;
   private ctx!: CanvasRenderingContext2D;
+  private distance: number = -1;
   private isDrawing: boolean;
   private layers: Layer[];
   private locked: boolean;
+  private mousePosition: { x: number, y: number } = { x: 0, y: 0 };
   private points: Point[];
   private room: Room;
 
@@ -63,8 +70,6 @@ export class DrawComponent {
         this.ctx.restore();
         this.isDrawing = false;
       }
-      // console.log(this.points);
-      // console.log(this.layers);
     }
   }
 
@@ -78,8 +83,13 @@ export class DrawComponent {
         layer.reset();
         this.ctx.restore();
         this.cell = this.getCell(event.clientX, event.clientY);
+        const dx = this.cell.x - this.points[this.points.length - 1].x;
+        const dy = this.cell.y - this.points[this.points.length - 1].y;
+        this.distance = Math.round(Math.sqrt(dx ** 2 + dy ** 2) * 10) / 10;
+        this.angle = Math.atan2(dy, dx) * 180 / Math.PI;
+        this.mousePosition.x = event.clientX;
+        this.mousePosition.y = event.clientY;
         this.ctx.beginPath();
-        // console.log(`coords: ${event.clientX}, ${event.clientY} start: ${(this.points[this.points.length - 1].x - 1) * 10}, ${(this.points[this.points.length - 1].y - 1) * 10} finish: ${(this.cell.x - 0.1) * 10}, ${(this.cell.y - 0.1) * 10}`);
         this.ctx.moveTo((this.points[this.points.length - 1].x) * 100, (this.points[this.points.length - 1].y) * 100);
         this.ctx.lineTo((this.cell.x) * 100, (this.cell.y) * 100);
         this.ctx.strokeStyle = 'green';
@@ -115,15 +125,32 @@ export class DrawComponent {
       }
     } else {
       this.isDrawing = true;
+      this.mousePosition.x = event.clientX;
+      this.mousePosition.y = event.clientY;
     }
     this.points.push(this.cell);
-    // console.log(this.points);
     this.layers.push(new Layer(this.canvas.nativeElement));
-    // console.log(this.layers);
+  }
+  
+  public get drawingAngle(): number {
+    return this.angle;
+  }
+  
+  
+  public get drawingDistance(): number {
+    return this.distance;
+  }
+  
+  
+  public get drawingStatus(): boolean {
+    return this.isDrawing;
+  }
+  
+  public get mouseCoordinates(): { x: number, y: number } {
+    return this.mousePosition;
   }
 
   private getCell(x: number, y: number): Point {
-    console.log(`x: ${x} y: ${y} left: ${this.canvasRect.left} top: ${this.canvasRect.top}`);
     return new Point(Math.floor(Math.abs(this.canvasRect.left - x) / 10) / 10, Math.floor(Math.abs(this.canvasRect.top - y) / 10) / 10);
   }
 
