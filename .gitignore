@@ -7,11 +7,9 @@
 /bazel-out
 
 # Node
-/node_modules
-npm-debug.log
-yarn-error.log
-
-/env
+frontend/node_modules/
+frontend/npm-debug.log
+frontend/yarn-error.log
 
 # IDEs and editors
 .idea/
@@ -22,10 +20,8 @@ yarn-error.log
 .settings/
 *.sublime-workspace
 
-.angular/*
-
 # Visual Studio Code
-.vscode/*
+frontend/.vscode/*
 !.vscode/settings.json
 !.vscode/tasks.json
 !.vscode/launch.json
@@ -33,13 +29,14 @@ yarn-error.log
 .history/*
 
 # Miscellaneous
-/.angular/cache
+frontend/.angular/*
 .sass-cache/
 /connect.lock
 /coverage
 /libpeerconnection.log
 testem.log
 /typings
+/env
 
 # System files
 .DS_Store
