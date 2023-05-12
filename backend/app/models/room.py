@@ -6,5 +6,7 @@ from models.wall import Wall
 
 
 class Room(BaseModel):
-    created_date: datetime = datetime.now()
+    created: str
+    id: str = None
+    name: str
     walls: List[Wall]
