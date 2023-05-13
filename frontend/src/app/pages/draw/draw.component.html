@@ -1,4 +1,6 @@
 <canvas #canvas></canvas>
-<div *ngIf="isDrawing" [style.left.px]="mousePosition.x" [style.top.px]="mousePosition.y" class="info">
-    <p>Some info here</p>
+    <div *ngIf="status" [style.left.px]="coordinates.x" [style.top.px]="coordinates.y" class="info">
+    <p>x: {{ point.xCoordinate }}м y: {{ point.yCoordinate }}м</p>
+    <p>Угол: {{ angle }}°</p>
+    <p>Расстояние: {{ distance }}м</p>
 </div>

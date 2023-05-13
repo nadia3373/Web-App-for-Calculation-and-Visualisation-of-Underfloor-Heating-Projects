@@ -11,5 +11,5 @@ canvas {
     border: 1px solid black;
     padding: 10px;
     font-size: 12px;
-    pointer-events: none; /* чтобы не мешать рисованию на canvas */
+    pointer-events: none;
 }

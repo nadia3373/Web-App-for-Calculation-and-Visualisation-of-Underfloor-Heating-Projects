@@ -1,12 +1,13 @@
-from datetime import datetime
 from typing import List
-from pydantic import BaseModel
+from bson import ObjectId
+from pydantic import BaseModel, Field
 
-from models.wall import Wall
+from models.point import Point
 
 
 class Room(BaseModel):
+    area: float
     created: str
-    id: str = None
+    _id: ObjectId = ObjectId()
     name: str
-    walls: List[Wall]
+    points: List[Point]

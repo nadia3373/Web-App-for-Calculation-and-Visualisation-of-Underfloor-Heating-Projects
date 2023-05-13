@@ -1,6 +1,16 @@
-<ul>
-    <li *ngFor="let room of rooms">
-        {{ room.id }}
-        test
-    </li>
-</ul>
+<table>
+    <thead>
+        <tr>
+            <td>Название</td>
+            <td>Площадь</td>
+            <td>Дата создания</td>
+        </tr>
+    </thead>
+    <tbody>
+        <tr *ngFor="let room of rooms" [routerLink]="['/projects']" [queryParams]="{ r: room.roomId.toString() }">
+            <td>{{ room.roomName }}</td>
+            <td>{{ room.roomArea }}</td>
+            <td>{{ room.roomCreated | date:'dd-MM-yyyy HH:mm'}}</td>
+        </tr>
+    </tbody>
+</table>

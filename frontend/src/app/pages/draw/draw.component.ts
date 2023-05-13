@@ -1,204 +1,176 @@
 import { Component, ElementRef, HostListener, ViewChild } from '@angular/core';
-import * as earcut from 'earcut';
 import { Layer } from '../draw/layer.model';
 import { Point } from '../draw/point.model';
 import { Room } from './room.model';
 import { RoomService } from 'src/app/services/room/room.service';
+import { Router } from '@angular/router';
+import { ApiService } from 'src/app/services/api-service/api.service';
 
 @Component({
   selector: 'app-canvas',
-  template: `<canvas #canvas></canvas>
-             <div *ngIf="drawingStatus" [style.left.px]="mouseCoordinates.x" [style.top.px]="mouseCoordinates.y" class="info">
-              <p>Angle: {{ drawingAngle }}</p>
-              <p>Distance: {{ drawingDistance }}</p>
-             </div>`,
+  templateUrl: './draw.component.html',
   styleUrls: ['./draw.component.css']
 })
 export class DrawComponent {
   @ViewChild('canvas', { static: true })
   canvas!: ElementRef<HTMLCanvasElement>;
-  private angle: number = 0;
-  private canvasRect!: DOMRect;
-  private cell: Point;
-  private ctx!: CanvasRenderingContext2D;
-  private distance: number = -1;
-  private isDrawing: boolean;
-  private layers: Layer[];
-  private locked: boolean;
-  private mousePosition: { x: number, y: number } = { x: 0, y: 0 };
-  private points: Point[];
-  private room: Room;
+  private currentAngle: number = 0;
+  private currentPoint: Point = new Point(0, 0);
+  private context!: CanvasRenderingContext2D;
+  private currentDistance: number = 0;
+  private isDrawing: boolean = false;
+  private layers: Layer[] = [];
+  private currentCoordinates: { x: number, y: number } = { x: 0, y: 0 };
+  private rect!: DOMRect;
+  private room: Room = new Room;
 
-  constructor(private roomService: RoomService) {
-    this.cell = new Point(0, 0);
-    this.isDrawing = false;
-    this.layers = [];
-    this.locked = false;
-    this.points = [];
-    this.room = new Room;
-  }
+  constructor(private apiService: ApiService, private roomService: RoomService, private router: Router) {}
 
   ngOnInit(): void {
-    this.canvasRect = this.canvas.nativeElement.getBoundingClientRect();
+    this.rect = this.canvas.nativeElement.getBoundingClientRect();
     this.canvas.nativeElement.width = this.canvas.nativeElement.offsetWidth;
     this.canvas.nativeElement.height = this.canvas.nativeElement.offsetHeight;
-    this.ctx = this.canvas.nativeElement.getContext('2d') as CanvasRenderingContext2D;
+    this.context = this.canvas.nativeElement.getContext('2d') as CanvasRenderingContext2D;
     this.getGrid(100, 100);
   }
 
   @HostListener('window:keydown', ['$event'])
   onKey = (event: KeyboardEvent) => {
-    if (this.locked) return;
-    if (event.key === 'Escape') {
-      this.points = [];
-      while (this.layers.length > 1) this.layers.pop();
-      this.layers[0].reset();
-      this.ctx.restore();
-      this.isDrawing = false;
-    } else if (event.key === 'Backspace') {
-      if (this.points.length > 1 && this.layers.length > 1) {
-        this.points.pop();
-        this.layers.pop();
-        this.layers[this.layers.length - 1].reset();
-        this.ctx.restore();
-      } else {
-        this.points = [];
-        while (this.layers.length > 1) {
-          this.layers.pop();
-        }
-        this.layers[0].reset();
-        this.ctx.restore();
-        this.isDrawing = false;
-      }
-    }
+    this.isDrawing && (
+      event.key === 'Escape' ? this.clearAllPoints() :
+      event.key === 'Backspace' ? this.clearPoint() :
+      null
+    );
   }
 
   @HostListener('mousemove', ['$event'])
   onMove = (event: MouseEvent) => {
-    if (this.locked) return;
-    if (this.isDrawing) {
-      const currentCell = this.getCell(event.clientX, event.clientY);
-      if (Math.abs(currentCell.x - this.cell.x) > 0 || Math.abs(currentCell.y - this.cell.y) > 0) {
-        const layer = this.layers[this.layers.length - 1];
-        layer.reset();
-        this.ctx.restore();
-        this.cell = this.getCell(event.clientX, event.clientY);
-        const dx = this.cell.x - this.points[this.points.length - 1].x;
-        const dy = this.cell.y - this.points[this.points.length - 1].y;
-        this.distance = Math.round(Math.sqrt(dx ** 2 + dy ** 2) * 10) / 10;
-        this.angle = Math.atan2(dy, dx) * 180 / Math.PI;
-        this.mousePosition.x = event.clientX;
-        this.mousePosition.y = event.clientY;
-        this.ctx.beginPath();
-        this.ctx.moveTo((this.points[this.points.length - 1].x) * 100, (this.points[this.points.length - 1].y) * 100);
-        this.ctx.lineTo((this.cell.x) * 100, (this.cell.y) * 100);
-        this.ctx.strokeStyle = 'green';
-        this.ctx.lineWidth = 10;
-        this.ctx.lineCap = "square";
-        this.ctx.stroke();
-      }
+    if (!this.isDrawing) return;
+    this.currentCoordinates = {x: event.clientX, y: event.clientY};
+    this.currentPoint = new Point(Math.abs(this.rect.left - this.currentCoordinates.x), Math.abs(this.rect.top - this.currentCoordinates.y));
+    if (Math.abs(this.room.roomPoints[this.room.roomPoints.length - 1].xCoordinate - this.currentPoint.xCoordinate) > 0 || Math.abs(this.room.roomPoints[this.room.roomPoints.length - 1].yCoordinate - this.currentPoint.yCoordinate) > 0) {
+      this.currentAngle = this.roomService.calculateAngle(this.currentPoint, this.room.roomPoints[this.room.roomPoints.length - 1]);
+      this.currentDistance = this.roomService.calculateDistance(this.currentPoint, this.room.roomPoints[this.room.roomPoints.length - 1]);
+      this.layers[this.layers.length - 1].reset();
+      this.context.restore();
+      this.context.beginPath();
+      this.context.moveTo(this.room.roomPoints[this.room.roomPoints.length - 1].xPx, this.room.roomPoints[this.room.roomPoints.length - 1].yPx);
+      this.context.lineTo(this.currentPoint.xPx, this.currentPoint.yPx);
+      this.context.strokeStyle = 'green';
+      this.context.lineWidth = 10;
+      this.context.lineCap = "square";
+      this.context.stroke();
     }
   }
 
   @HostListener('mouseup', ['$event'])
   onClick = (event: MouseEvent) => {
-    if (this.locked) return;
-    this.cell = this.getCell(event.clientX, event.clientY);
-    if (this.points.length > 0 && this.points[0].x === this.cell.x && this.points[0].y === this.cell.y) {
-      this.isDrawing = false;
-      this.layers = [];
-      this.locked = true;
-      const vertices: number[] = this.points.flatMap(point => [point.x, point.y]);
-      const triangles: number[][] = this.triangulatePolygon(vertices);
-      console.log(triangles);
-      this.room.area = this.roomService.calculateArea(this.points, triangles);
-      console.log(this.room.area);
-      if (this.roomService.createRoom(this.points)) {
-        this.roomService.saveRoom().subscribe({
-          next: response => {
-            console.log('Room saved successfully:', response);
-          },
-          error: error => {
-            console.error('Error saving room:', error);
-          }
-        });
-      }
+    this.currentCoordinates = {x: event.clientX, y: event.clientY};
+    this.currentPoint = new Point(Math.abs(this.rect.left - this.currentCoordinates.x), Math.abs(this.rect.top - this.currentCoordinates.y));
+    if (this.room.roomPoints.length > 0 && this.room.roomPoints[0].xCoordinate === this.currentPoint.xCoordinate && this.room.roomPoints[0].yCoordinate === this.currentPoint.yCoordinate) {
+      const vertices: number[] = this.room.roomPoints.flatMap(p => [p.xCoordinate, p.yCoordinate]);
+      const triangles: number[][] = this.roomService.triangulatePolygon(vertices);
+      this.room.roomArea = this.roomService.calculateArea(this.room.roomPoints, triangles);
+      this.apiService.postRoom(this.room).subscribe({
+        next: response => {
+          this.roomService.downloadImage(this.layers[this.layers.length - 1].getCanvas.toDataURL('image/png'), 'canvas.png');
+          // this.router.navigate(['/rooms']);
+        },
+        error: error => {
+          this.clearAllPoints();
+        }
+      });
     } else {
       this.isDrawing = true;
-      this.mousePosition.x = event.clientX;
-      this.mousePosition.y = event.clientY;
     }
-    this.points.push(this.cell);
+    this.room.addPoint(this.currentPoint);
     this.layers.push(new Layer(this.canvas.nativeElement));
   }
   
-  public get drawingAngle(): number {
-    return this.angle;
+  public get angle(): number {
+    return this.currentAngle;
   }
   
   
-  public get drawingDistance(): number {
-    return this.distance;
+  public get distance(): number {
+    return this.currentDistance;
   }
   
   
-  public get drawingStatus(): boolean {
+  public get status(): boolean {
     return this.isDrawing;
   }
   
-  public get mouseCoordinates(): { x: number, y: number } {
-    return this.mousePosition;
+  public get coordinates(): { x: number, y: number } {
+    return this.currentCoordinates;
   }
 
-  private getCell(x: number, y: number): Point {
-    return new Point(Math.floor(Math.abs(this.canvasRect.left - x) / 10) / 10, Math.floor(Math.abs(this.canvasRect.top - y) / 10) / 10);
+  
+  public get point(): Point {
+    return this.currentPoint;
+  }
+  
+
+  private clearPoint() {
+    if (this.room.roomPoints.length > 1 && this.layers.length > 1) {
+      this.room.roomPoints.pop();
+      this.layers.pop();
+      this.layers[this.layers.length - 1].reset();
+      this.context.restore();
+    } else {
+      this.room.roomPoints = [];
+      while (this.layers.length > 1) {
+        this.layers.pop();
+      }
+      this.layers[0].reset();
+      this.context.restore();
+      this.isDrawing = false;
+    }
+  }
+
+  private clearAllPoints() {
+    console.log("works");
+    this.room.roomPoints = [];
+    while (this.layers.length > 1) this.layers.pop();
+    this.layers[0].reset();
+    this.context.restore();
+    this.isDrawing = false;
   }
 
   private getGrid(cellWidth: number, cellHeight: number): void {
     for (let x = 0; x <= this.canvas.nativeElement.width; x += cellWidth / 10) {
-      this.ctx.beginPath();
-      this.ctx.moveTo(x + 0.5, 0);
-      this.ctx.lineTo(x + 0.5, this.canvas.nativeElement.height);
-      this.ctx.strokeStyle = '#eee';
-      this.ctx.stroke();
+      this.context.beginPath();
+      this.context.moveTo(x + 0.5, 0);
+      this.context.lineTo(x + 0.5, this.canvas.nativeElement.height);
+      this.context.strokeStyle = '#eee';
+      this.context.stroke();
     }
 
     for (let y = 0; y <= this.canvas.nativeElement.height; y += cellHeight / 10) {
-      this.ctx.beginPath();
-      this.ctx.moveTo(0, y + 0.5);
-      this.ctx.lineTo(this.canvas.nativeElement.width, y + 0.5);
-      this.ctx.strokeStyle = '#eee';
-      this.ctx.stroke();
+      this.context.beginPath();
+      this.context.moveTo(0, y + 0.5);
+      this.context.lineTo(this.canvas.nativeElement.width, y + 0.5);
+      this.context.strokeStyle = '#eee';
+      this.context.stroke();
     }
 
     for (let x = 0; x <= this.canvas.nativeElement.width; x += cellWidth) {
-      this.ctx.beginPath();
-      this.ctx.moveTo(x + 0.5, 0);
-      this.ctx.lineTo(x + 0.5, this.canvas.nativeElement.height);
-      this.ctx.strokeStyle = '#000';
-      this.ctx.stroke();
+      this.context.beginPath();
+      this.context.moveTo(x + 0.5, 0);
+      this.context.lineTo(x + 0.5, this.canvas.nativeElement.height);
+      this.context.strokeStyle = '#000';
+      this.context.stroke();
     }
 
     for (let y = 0; y <= this.canvas.nativeElement.height; y += cellHeight) {
-      this.ctx.beginPath();
-      this.ctx.moveTo(0, y + 0.5);
-      this.ctx.lineTo(this.canvas.nativeElement.width, y + 0.5);
-      this.ctx.strokeStyle = '#000';
-      this.ctx.stroke();
+      this.context.beginPath();
+      this.context.moveTo(0, y + 0.5);
+      this.context.lineTo(this.canvas.nativeElement.width, y + 0.5);
+      this.context.strokeStyle = '#000';
+      this.context.stroke();
     }
-
-    this.ctx.save();
+    this.context.save();
     this.layers.push(new Layer(this.canvas.nativeElement));
-    console.log(this.layers);
-    this.ctx.restore();
+    this.context.restore();
   }
-
-  triangulatePolygon(vertices: number[]): number[][] {
-    const indices = earcut(vertices);
-    const triangles = [];
-    for (let i = 0; i < indices.length; i += 3) {
-      triangles.push([indices[i], indices[i + 1], indices[i + 2]]);
-    }
-    return triangles;
-  }  
 }

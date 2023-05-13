@@ -8,6 +8,12 @@ export class Layer {
       this.ctx = canvas.getContext('2d')!;
       this.savedState = this.ctx.getImageData(0, 0, canvas.width, canvas.height);
     }
+
+    
+    public get getCanvas() : HTMLCanvasElement {
+      return this.canvas;
+    }
+    
   
     public reset(): void {
       this.ctx.putImageData(this.savedState, 0, 0);
