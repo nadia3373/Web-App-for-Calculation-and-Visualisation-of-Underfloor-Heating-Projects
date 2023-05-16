@@ -2,15 +2,20 @@
     <thead>
         <tr>
             <td>Название</td>
+            <td>Id</td>
             <td>Площадь</td>
             <td>Дата создания</td>
         </tr>
     </thead>
     <tbody>
-        <tr *ngFor="let room of rooms" [routerLink]="['/projects']" [queryParams]="{ r: room.roomId.toString() }">
-            <td>{{ room.roomName }}</td>
+        <tr *ngFor="let room of rooms">
+            <td [routerLink]="['/projects']" [queryParams]="{ r: room.roomId.toString() }">{{ room.roomName }}</td>
+            <td>{{ room.roomId }}</td>
             <td>{{ room.roomArea }}</td>
             <td>{{ room.roomCreated | date:'dd-MM-yyyy HH:mm'}}</td>
+            <td>
+                <button (click)="download(room.roomImage, 'image.png')">Скачать план</button>
+            </td>
         </tr>
     </tbody>
 </table>

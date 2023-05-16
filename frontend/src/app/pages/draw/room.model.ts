@@ -1,17 +1,18 @@
-import ObjectId from 'bson-objectid';
 import { Point } from "./point.model";
 
 export class Room {
     private area: number;
     private created: string;
-    private _id: ObjectId;
+    private id: string;
+    private image: string;
     private name: string;
     private points: Point[];
 
-    constructor(area: number = 0, created: string = new Date().toISOString(), _id: ObjectId = new ObjectId(), name: string = 'test', points: Point[] = []) {
+    constructor(area: number = 0, created: string = new Date().toISOString(), id: string = '', image: string = '', name: string = 'test', points: Point[] = []) {
       this.area = area;
       this.created = created;
-      this._id = _id;
+      this.id = id;
+      this.image = image;
       this.name = name;
       this.points = points;
     }
@@ -24,8 +25,12 @@ export class Room {
       return this.created;
     }
     
-    public get roomId(): ObjectId {
-      return this._id;
+    public get roomId(): string {
+      return this.id;
+    }
+    
+    public get roomImage(): string {
+      return this.image;
     }
     
     public get roomName(): string {
@@ -44,8 +49,12 @@ export class Room {
       this.created = c;
     }
     
-    public set roomId(i: ObjectId) {
-      this._id = i;
+    public set roomId(i: string) {
+      this.id = i;
+    }
+
+    public set roomImage(i: string) {
+      this.image = i;
     }
     
     public set roomName(n: string) {

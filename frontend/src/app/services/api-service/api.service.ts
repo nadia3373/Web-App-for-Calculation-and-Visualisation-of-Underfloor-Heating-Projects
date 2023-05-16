@@ -25,9 +25,10 @@ export class ApiService {
 
   public getRooms(): Observable<Room[]> {
     return this.http.get<any[]>(environment.API_URL + '/rooms').pipe(map(data => {
+      console.log(data);
         return data.map(roomData => {
           const points: Point[] = roomData.points.map((pointData: any) => new Point(pointData.x, pointData.y));
-          return new Room(roomData.area, roomData.created, roomData.id, roomData.name, points);
+          return new Room(roomData.area, roomData.created, roomData.id, roomData.image, roomData.name, points);
         });
       })
     );

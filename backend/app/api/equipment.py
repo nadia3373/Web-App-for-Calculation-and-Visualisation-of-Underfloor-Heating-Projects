@@ -1,0 +1,41 @@
+from itertools import combinations
+from typing import List
+from bson import ObjectId
+from fastapi import APIRouter, Query
+from db.database import get_database
+from models.combos import Combo
+from models.equipment import Equipment, Pipe
+from models.room import Room
+
+
+router = APIRouter()
+db = get_database()
+
+@router.get("/equipment", response_model=Equipment)
+async def get_equipment():
+    collection = db.boxes
+    boxes = collection.find()
+    collection = db.pipes
+    pipes = collection.find()
+    collection = db.thermocontrollers
+    thermocontrollers = collection.find()
+    return Equipment(boxes=[b for b in boxes], pipes=[p for p in pipes], thermocontrollers=[t for t in thermocontrollers])
+
+@router.get("/pipecombos", response_model=List[Combo])
+async def get_combos(r: str = Query(None)):
+    combos = []
+    if r:
+        collection = db.rooms
+        room = collection.find_one({"_id": ObjectId(r)})
+        if room:
+            room = Room(**room)
+            area = room.area
+            collection = db.pipes
+            pipes = collection.find()
+            pipes = [Pipe(**p) for p in pipes]
+            for i in range(1, len(pipes) + 1):
+                for c in combinations(pipes, i):
+                    power = sum(pipe.power for pipe in c) / area
+                    if 100 <= power <= 200: combos.append(Combo(pipes=c, power=power))
+            combos = sorted(combos, key=lambda x: sum(pipe.price for pipe in x.pipes))
+    return combos

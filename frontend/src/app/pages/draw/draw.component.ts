@@ -12,8 +12,10 @@ import { ApiService } from 'src/app/services/api-service/api.service';
   styleUrls: ['./draw.component.css']
 })
 export class DrawComponent {
-  @ViewChild('canvas', { static: true })
-  canvas!: ElementRef<HTMLCanvasElement>;
+  @ViewChild('gridCanvas', { static: true })
+  gridCanvas!: ElementRef<HTMLCanvasElement>;
+  @ViewChild('userCanvas', { static: true })
+  userCanvas!: ElementRef<HTMLCanvasElement>;
   private currentAngle: number = 0;
   private currentPoint: Point = new Point(0, 0);
   private context!: CanvasRenderingContext2D;
@@ -22,16 +24,19 @@ export class DrawComponent {
   private layers: Layer[] = [];
   private currentCoordinates: { x: number, y: number } = { x: 0, y: 0 };
   private rect!: DOMRect;
-  private room: Room = new Room;
+  private room: Room = new Room();
 
   constructor(private apiService: ApiService, private roomService: RoomService, private router: Router) {}
 
   ngOnInit(): void {
-    this.rect = this.canvas.nativeElement.getBoundingClientRect();
-    this.canvas.nativeElement.width = this.canvas.nativeElement.offsetWidth;
-    this.canvas.nativeElement.height = this.canvas.nativeElement.offsetHeight;
-    this.context = this.canvas.nativeElement.getContext('2d') as CanvasRenderingContext2D;
+    this.rect = this.userCanvas.nativeElement.getBoundingClientRect();
+    this.gridCanvas.nativeElement.width = this.gridCanvas.nativeElement.offsetWidth;
+    this.gridCanvas.nativeElement.height = this.gridCanvas.nativeElement.offsetHeight;
+    this.userCanvas.nativeElement.width = this.userCanvas.nativeElement.offsetWidth;
+    this.userCanvas.nativeElement.height = this.userCanvas.nativeElement.offsetHeight;
+    this.context = this.gridCanvas.nativeElement.getContext('2d') as CanvasRenderingContext2D;
     this.getGrid(100, 100);
+    this.context = this.userCanvas.nativeElement.getContext('2d') as CanvasRenderingContext2D;
   }
 
   @HostListener('window:keydown', ['$event'])
@@ -71,10 +76,11 @@ export class DrawComponent {
       const vertices: number[] = this.room.roomPoints.flatMap(p => [p.xCoordinate, p.yCoordinate]);
       const triangles: number[][] = this.roomService.triangulatePolygon(vertices);
       this.room.roomArea = this.roomService.calculateArea(this.room.roomPoints, triangles);
+      this.room.roomImage = this.getCroppedImage();
+      console.log(this.room);
       this.apiService.postRoom(this.room).subscribe({
         next: response => {
-          this.roomService.downloadImage(this.layers[this.layers.length - 1].getCanvas.toDataURL('image/png'), 'canvas.png');
-          // this.router.navigate(['/rooms']);
+          this.router.navigate(['/rooms']);
         },
         error: error => {
           this.clearAllPoints();
@@ -84,18 +90,16 @@ export class DrawComponent {
       this.isDrawing = true;
     }
     this.room.addPoint(this.currentPoint);
-    this.layers.push(new Layer(this.canvas.nativeElement));
+    this.layers.push(new Layer(this.userCanvas.nativeElement));
   }
   
   public get angle(): number {
     return this.currentAngle;
   }
   
-  
   public get distance(): number {
     return this.currentDistance;
   }
-  
   
   public get status(): boolean {
     return this.isDrawing;
@@ -104,73 +108,76 @@ export class DrawComponent {
   public get coordinates(): { x: number, y: number } {
     return this.currentCoordinates;
   }
-
   
   public get point(): Point {
     return this.currentPoint;
   }
-  
 
   private clearPoint() {
     if (this.room.roomPoints.length > 1 && this.layers.length > 1) {
       this.room.roomPoints.pop();
       this.layers.pop();
       this.layers[this.layers.length - 1].reset();
-      this.context.restore();
     } else {
-      this.room.roomPoints = [];
-      while (this.layers.length > 1) {
-        this.layers.pop();
-      }
-      this.layers[0].reset();
-      this.context.restore();
-      this.isDrawing = false;
+      this.clearAllPoints();
     }
   }
 
   private clearAllPoints() {
-    console.log("works");
     this.room.roomPoints = [];
     while (this.layers.length > 1) this.layers.pop();
     this.layers[0].reset();
-    this.context.restore();
     this.isDrawing = false;
   }
 
+  private getCroppedImage(): string {
+    const imageData = this.context.getImageData(0, 0, this.userCanvas.nativeElement.width, this.userCanvas.nativeElement.height);
+    let x1 = this.userCanvas.nativeElement.width, y1 = this.userCanvas.nativeElement.height, x2 = 0, y2 = 0;
+    for (let x = 0; x < this.userCanvas.nativeElement.width; x++) {
+      for (let y = 0; y < this.userCanvas.nativeElement.height; y++) {
+        const index = (y * this.userCanvas.nativeElement.width + x) * 4;
+        if (imageData.data[index + 3] > 0) {
+          x1 = Math.min(x1, x);
+          y1 = Math.min(y1, y);
+          x2 = Math.max(x2, x);
+          y2 = Math.max(y2, y);
+        }
+      }
+    }
+    const croppedCanvas = document.createElement('canvas');
+    const croppedContext = croppedCanvas.getContext('2d')!;
+    croppedCanvas.width = x2 - x1;
+    croppedCanvas.height = y2 - y1;
+    croppedContext.drawImage(this.userCanvas.nativeElement, x1, y1, croppedCanvas.width, croppedCanvas.height, 0, 0, croppedCanvas.width, croppedCanvas.height);
+    return croppedCanvas.toDataURL('image/png');
+  }
+
   private getGrid(cellWidth: number, cellHeight: number): void {
-    for (let x = 0; x <= this.canvas.nativeElement.width; x += cellWidth / 10) {
+    this.context.strokeStyle = '#eee';
+    for (let x = 0; x <= this.gridCanvas.nativeElement.width; x += cellWidth / 10) {
       this.context.beginPath();
       this.context.moveTo(x + 0.5, 0);
-      this.context.lineTo(x + 0.5, this.canvas.nativeElement.height);
-      this.context.strokeStyle = '#eee';
+      this.context.lineTo(x + 0.5, this.gridCanvas.nativeElement.height);
       this.context.stroke();
     }
-
-    for (let y = 0; y <= this.canvas.nativeElement.height; y += cellHeight / 10) {
+    for (let y = 0; y <= this.gridCanvas.nativeElement.height; y += cellHeight / 10) {
       this.context.beginPath();
       this.context.moveTo(0, y + 0.5);
-      this.context.lineTo(this.canvas.nativeElement.width, y + 0.5);
-      this.context.strokeStyle = '#eee';
+      this.context.lineTo(this.gridCanvas.nativeElement.width, y + 0.5);
       this.context.stroke();
     }
-
-    for (let x = 0; x <= this.canvas.nativeElement.width; x += cellWidth) {
+    this.context.strokeStyle = '#000';
+    for (let x = 0; x <= this.gridCanvas.nativeElement.width; x += cellWidth) {
       this.context.beginPath();
       this.context.moveTo(x + 0.5, 0);
-      this.context.lineTo(x + 0.5, this.canvas.nativeElement.height);
-      this.context.strokeStyle = '#000';
+      this.context.lineTo(x + 0.5, this.gridCanvas.nativeElement.height);
       this.context.stroke();
     }
-
-    for (let y = 0; y <= this.canvas.nativeElement.height; y += cellHeight) {
+    for (let y = 0; y <= this.gridCanvas.nativeElement.height; y += cellHeight) {
       this.context.beginPath();
       this.context.moveTo(0, y + 0.5);
-      this.context.lineTo(this.canvas.nativeElement.width, y + 0.5);
-      this.context.strokeStyle = '#000';
+      this.context.lineTo(this.gridCanvas.nativeElement.width, y + 0.5);
       this.context.stroke();
     }
-    this.context.save();
-    this.layers.push(new Layer(this.canvas.nativeElement));
-    this.context.restore();
   }
 }

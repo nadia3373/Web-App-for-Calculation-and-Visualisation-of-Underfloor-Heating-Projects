@@ -1,5 +1,5 @@
-canvas {
-    /* position: absolute; */
+.canvas {
+    position: absolute;
     margin-top: 20px;
     width: 97.7vw;
     height: 2001px;
