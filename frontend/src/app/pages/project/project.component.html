@@ -1,0 +1,4 @@
+<select [(ngModel)]="project.projectCombo" (change)="onComboChange()">
+    <option *ngFor="let combo of combos" [value]="combo" [selected]="combo === project.projectCombo">{{ combo }} - {{ combo.comboPower }}</option>
+</select>
+<canvas #canvas class="canvas"></canvas>

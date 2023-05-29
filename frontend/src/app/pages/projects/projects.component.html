@@ -1,1 +1,21 @@
-<p>projects works!</p>
+<div>
+    <button [routerLink]="['/project']" [queryParams]="{ rid: room }">Новый проект</button>
+</div>
+<table>
+    <thead>
+        <tr>
+            <td>Id</td>
+            <td>Дата создания</td>
+            <td>Изображение</td>
+        </tr>
+    </thead>
+    <tbody>
+        <tr *ngFor="let project of projects">
+            <td [routerLink]="['/project']" [queryParams]="{ r: project.projectId.toString() }">{{ project.projectId }}</td>
+            <td>{{ project.projectCreated | date:'dd-MM-yyyy HH:mm'}}</td>
+            <td>
+                <button (click)="download(project.projectImage, 'image.png')">Скачать проект</button>
+            </td>
+        </tr>
+    </tbody>
+</table>

@@ -11,6 +11,8 @@ import { ProjectsComponent } from './pages/projects/projects.component';
 import { RoomsComponent } from './pages/rooms/rooms.component';
 import { RoomService } from './services/room/room.service';
 import { DatePipe } from '@angular/common';
+import { ProjectComponent } from './pages/project/project.component';
+import { FormsModule } from '@angular/forms';
 
 @NgModule({
   declarations: [
@@ -18,12 +20,14 @@ import { DatePipe } from '@angular/common';
     IndexComponent,
     ProjectsComponent,
     RoomsComponent,
-    DrawComponent
+    DrawComponent,
+    ProjectComponent
   ],
   imports: [
+    AppRoutingModule,
     BrowserModule,
-    HttpClientModule,
-    AppRoutingModule
+    FormsModule,
+    HttpClientModule
   ],
   providers: [ApiService, RoomService, DatePipe],
   bootstrap: [AppComponent]

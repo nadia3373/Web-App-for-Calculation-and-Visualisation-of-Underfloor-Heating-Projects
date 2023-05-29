@@ -22,19 +22,18 @@ export class RoomsComponent implements OnInit {
   }
 
   download(imageUrl: string, imageName: string) {
-    console.log(imageUrl);
     fetch(imageUrl)
-      .then(response => response.arrayBuffer())
-      .then(buffer => {
-        const blob = new Blob([buffer], { type: 'image/png' });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = imageName;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(url);
-      });
+    .then(response => response.arrayBuffer())
+    .then(buffer => {
+      const blob = new Blob([buffer], { type: 'image/png' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = imageName;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    });
   }
 }

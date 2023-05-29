@@ -27,7 +27,8 @@ pipes = [Pipe(id=str(ObjectId()), length=8.5, model="ТТ-1/2", oc=1.5, power=34
 
 thermocontrollers = [ThermoController(id=str(ObjectId()), model="РТС-1", price=1800),
                      ThermoController(id=str(ObjectId()), model="РТС-2", price=3550),
-                     ThermoController(id=str(ObjectId()), model="РТС-3", price=3900)]
+                     ThermoController(id=str(ObjectId()), model="РТС-3", price=3900),
+                     ThermoController(id=str(ObjectId()), model="РТС-4", price=4600)]
 
 # db.equipment.insert_many([mounting_box.dict()] + [pipe.dict() for pipe in pipes] + [tc.dict() for tc in thermocontrollers])
 

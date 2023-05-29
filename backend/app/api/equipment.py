@@ -29,13 +29,15 @@ async def get_combos(r: str = Query(None)):
         room = collection.find_one({"_id": ObjectId(r)})
         if room:
             room = Room(**room)
-            area = room.area
+            area = room.offarea
             collection = db.pipes
             pipes = collection.find()
             pipes = [Pipe(**p) for p in pipes]
-            for i in range(1, len(pipes) + 1):
+            for i in range(1, 3):
                 for c in combinations(pipes, i):
+                    length = sum(pipe.length for pipe in c)
                     power = sum(pipe.power for pipe in c) / area
-                    if 100 <= power <= 200: combos.append(Combo(pipes=c, power=power))
+                    print(power)
+                    if 100 <= power < 200: combos.append(Combo(length=length, pipes=c, power=power))
             combos = sorted(combos, key=lambda x: sum(pipe.price for pipe in x.pipes))
     return combos

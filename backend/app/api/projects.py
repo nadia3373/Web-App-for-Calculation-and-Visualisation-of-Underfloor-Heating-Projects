@@ -9,13 +9,10 @@ router = APIRouter()
 db = get_database()
 
 @router.get("/projects", response_model=List[Project])
-async def get_projects(r: str = Query(None)):
+async def get_projects(pid: str = Query(None), rid: str = Query(None)):
     projects = []
     collection = db.projects
-    if r:
-        result = collection.find_one({"_id": ObjectId(r)})
-        projects.append(Project(result))
-    else:
-        result = collection.find()
-        projects = [p for p in result]
+    if pid: results = collection.find({"_id": ObjectId(pid)})
+    else: results = collection.find({"room": ObjectId(rid)}) if rid else collection.find()
+    if results: projects = [p for p in results]
     return projects

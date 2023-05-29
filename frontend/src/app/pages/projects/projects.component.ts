@@ -9,18 +9,47 @@ import { ApiService } from 'src/app/services/api-service/api.service';
   styleUrls: ['./projects.component.css']
 })
 export class ProjectsComponent {
-  private projects: Project[] = [];
+  projects: Project[] = [];
+  project: string = '';
+  room: string = '';
 
   constructor(private apiService: ApiService, private route: ActivatedRoute) { }
 
   ngOnInit() {
-    const roomId = this.route.snapshot.queryParamMap.get('r') || '';
-    console.log(roomId);
-    this.apiService.getProjects(roomId).subscribe({
-      next: (projects: Project[]) => {
-        this.projects = projects;
-      },
-      error: (error) => console.error(error)
+    this.room = this.route.snapshot.queryParamMap.get('r') || '';
+    if (this.room !== '') {
+      this.apiService.getProjects('', this.room).subscribe({
+        next: (projects: Project[]) => {
+          this.projects = projects;
+        },
+        error: (error) => console.error(error)
+      });
+    } else {
+      this.project = this.route.snapshot.queryParamMap.get('project') || '';
+      if (this.project !== '') {
+        this.apiService.getProjects(this.project, '').subscribe({
+          next: (projects: Project[]) => {
+            this.projects = projects;
+          },
+          error: (error) => console.error(error)
+        });
+      }
+    }
+  }
+
+  download(imageUrl: string, imageName: string) {
+    fetch(imageUrl)
+    .then(response => response.arrayBuffer())
+    .then(buffer => {
+      const blob = new Blob([buffer], { type: 'image/png' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = imageName;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
     });
   }
 }

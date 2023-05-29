@@ -1,28 +1,24 @@
 export class Point {
-    private x: number;
-    private y: number;
+    x: number;
+    y: number;
+    xPx: number;
+    yPx: number;
 
-    constructor(x: number = 0, y: number = 0) {
-        this.x = Math.floor(x / 10) / 10;
-        this.y = Math.floor(y / 10) / 10;
-    }
-
-    public get xCoordinate() : number {
-        return this.x;
-    }
-    
-    
-    public get yCoordinate() : number {
-        return this.y;
-    }
-    
-    public get xPx() : number {
-        return this.x * 100;
+    constructor(x: number = -1, y: number = -1, xPx: number = -1, yPx: number = -1) {
+        if (xPx >= 0 && yPx >= 0) {
+            this.x = Math.floor(xPx / 10) / 10;
+            this.y = Math.floor(yPx / 10) / 10;
+            this.xPx = Math.floor(xPx / 10) / 10 * 100;
+            this.yPx = Math.floor(yPx / 10) / 10 * 100;
+        } else {
+            this.x = x;
+            this.y = y;
+            this.xPx = x * 100;
+            this.yPx = y * 100;
+        }
     }
     
-    
-    public get yPx() : number {
-        return this.y * 100;
+    public toString(): string {
+        return `x: ${this.x} ${this.xPx} y: ${this.y} ${this.yPx}`
     }
-    
 }

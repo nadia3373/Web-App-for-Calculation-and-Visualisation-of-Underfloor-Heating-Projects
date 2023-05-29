@@ -1,7 +1,7 @@
 <canvas #gridCanvas class="canvas"></canvas>
 <canvas #userCanvas class="canvas"></canvas>
     <div *ngIf="status" [style.left.px]="coordinates.x" [style.top.px]="coordinates.y" class="info">
-    <p>x: {{ point.xCoordinate }}м y: {{ point.yCoordinate }}м</p>
+    <p>x: {{ point.x }}м y: {{ point.y }}м</p>
     <p>Угол: {{ angle | number: '1.1-1' }}°</p>
     <p>Расстояние: {{ distance | number: '1.1-1' }}м</p>
 </div>
