@@ -1,4 +1,6 @@
-<select [(ngModel)]="project.projectCombo" (change)="onComboChange()">
-    <option *ngFor="let combo of combos" [value]="combo" [selected]="combo === project.projectCombo">{{ combo }} - {{ combo.comboPower }}</option>
+<select [(ngModel)]="comboIndex" (change)="onComboChange()">
+    <option *ngFor="let combo of combos; let i = index" [value]="i" [selected]="combos[i] === project.projectCombo">
+        {{ combo }} - {{ combos[i].comboPower }}
+    </option>
 </select>
 <canvas #canvas class="canvas"></canvas>

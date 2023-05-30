@@ -26,7 +26,7 @@ export class Layout {
     }
 
     public calculateDifference() {
-        this.difference = this.pipeLayouts.reduce((sum, pipeLayout) => sum + pipeLayout.diff, 0);
+        this.difference = Math.abs(this.pipeLayouts.reduce((sum, pipeLayout) => sum + pipeLayout.diff, 0));
     }
 
     public toString() {

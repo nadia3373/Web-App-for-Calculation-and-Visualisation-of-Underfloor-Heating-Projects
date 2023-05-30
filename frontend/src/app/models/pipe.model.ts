@@ -29,4 +29,8 @@ export class Pipe {
     public get getPrice(): number {
         return this.price;
     }
+
+    public toString(): string {
+        return `model: ${this.model}, length: ${this.length}, price: ${this.price}`;
+    }
 }

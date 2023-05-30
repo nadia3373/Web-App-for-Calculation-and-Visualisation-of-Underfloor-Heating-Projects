@@ -30,7 +30,7 @@ export class PipeLayout {
         this.corners = this.arcLength / 4 * 2;
         this.closingLine = this.width - this.diameter;
         this.totalLength = this.innerLines + this.outerLines + this.arcs + this.corners + this.closingLine;
-        this.difference = Math.abs(this.totalLength - this.pipeLength);
+        this.difference = this.totalLength - this.pipeLength;
     }
 
     public get d(): number {

@@ -8,7 +8,7 @@ export class Wall {
     position: string;
     type: string;
 
-    constructor(angle: number = 0, length: number = 0, p1: Point, p2: Point, position: string = '', type: string = '') {
+    constructor(angle: number = 0, length: number = 0, p1: Point = new Point(), p2: Point = new Point(), position: string = '', type: string = '') {
         this.angle = angle;
         this.length = length;
         this.points = [];
