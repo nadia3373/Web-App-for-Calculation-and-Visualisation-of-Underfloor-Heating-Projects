@@ -1,6 +1,22 @@
-<select [(ngModel)]="comboIndex" (change)="onComboChange()">
-    <option *ngFor="let combo of combos; let i = index" [value]="i" [selected]="combos[i] === project.projectCombo">
-        {{ combo }} - {{ combos[i].comboPower }}
-    </option>
-</select>
-<canvas #canvas class="canvas"></canvas>
+<div class="input-container">
+    <div class="wrapper">
+        <label for="comboSelect">Нагревательные элементы:</label>
+        <select id="comboSelect" [(ngModel)]="comboIndex" (change)="onComboChange()">
+            <option *ngFor="let combo of combos; let i = index" [value]="i" [selected]="combos[i] === project.combo">
+                {{ combos[i].name }} - {{ combos[i].power }}
+            </option>
+        </select>
+    </div>
+    <div class="wrapper">
+        <label for="controllerSelect">Терморегулятор:</label>
+        <select id="controllerSelect" [(ngModel)]="controllerIndex" (change)="onControllerChange()">
+            <option *ngFor="let controller of controllers; let i = index" [value]="i">
+                {{ controllers[i].model }} - {{ controllers[i].price }}
+            </option>
+        </select>
+    </div>
+    <button (click)="pdfService.downloadReport(project)" *ngIf="ready">Скачать отчёт</button>
+</div>
+<div class="canvas-container">
+    <canvas #canvas class="canvas"></canvas>
+</div>

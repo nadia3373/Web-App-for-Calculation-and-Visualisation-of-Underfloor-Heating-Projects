@@ -1,41 +1,19 @@
 import { Pipe } from "./pipe.model";
 
 export class Combo {
-    private length: number;
-    private pipes: Pipe[];
-    private power: number;
+    public id: string;
+    public length: number;
+    public pipes: Pipe[];
+    public power: number;
 
-    constructor(length: number = 0, pipes: Pipe[] = [], power: number = 0) {
+    constructor(id: string = '', length: number = 0, pipes: Pipe[] = [], power: number = 0) {
+        this.id = id;
         this.length = length;
         this.pipes = pipes;
         this.power = power;
     }
 
-    get comboLength(): number {
-        return this.length;
-    }
-
-    get comboPipes(): Pipe[] {
-        return this.pipes;
-    }
-
-    get comboPower(): number {
-        return this.power;
-    }
-
-    set comboLength(l: number) {
-        this.length = l;
-    }
-
-    set comboPipes(pipes: Pipe[]) {
-        this.pipes = pipes;
-    }
-
-    set comboPower(power: number) {
-        this.power = power;
-    }
-
-    public toString(): string {
-        return this.pipes.map(pipe => pipe.getModel).join(', ')
+    public get name(): string {
+        return this.pipes.map(pipe => pipe.model).join(', ')
     }
 }

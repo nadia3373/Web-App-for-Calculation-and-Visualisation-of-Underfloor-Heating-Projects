@@ -1,11 +1,12 @@
+import { ApiService } from 'src/app/services/api-service/api.service';
 import { Component, ElementRef, HostListener, ViewChild } from '@angular/core';
-import { Layer } from '../draw/layer.model';
-import { Point } from '../draw/point.model';
-import { Room } from './room.model';
+import { Layer } from '../../models/layer.model';
+import { Point } from '../../models/point.model';
+import { Room } from '../../models/room.model';
 import { RoomService } from 'src/app/services/room/room.service';
 import { Router } from '@angular/router';
-import { ApiService } from 'src/app/services/api-service/api.service';
-import { Wall } from './wall.model';
+import { Wall } from '../../models/wall.model';
+import { ImageService } from 'src/app/services/image/image.service';
 
 @Component({
   selector: 'app-canvas',
@@ -28,9 +29,9 @@ export class DrawComponent {
   private room: Room = new Room();
   private walls: Point[] = [];
 
-  constructor(private apiService: ApiService, private roomService: RoomService, private router: Router) {}
+  constructor(private apiService: ApiService, private imageService: ImageService, private roomService: RoomService, private router: Router) {}
 
-  ngOnInit(): void {
+  public ngOnInit(): void {
     this.rect = this.userCanvas.nativeElement.getBoundingClientRect();
     this.gridCanvas.nativeElement.width = this.gridCanvas.nativeElement.offsetWidth;
     this.gridCanvas.nativeElement.height = this.gridCanvas.nativeElement.offsetHeight;
@@ -53,15 +54,14 @@ export class DrawComponent {
   @HostListener('mousemove', ['$event'])
   onMove = (event: MouseEvent) => {
     if (!this.isDrawing) return;
-    this.currentCoordinates = {x: event.clientX, y: event.clientY};
-    this.currentPoint = new Point(-1, -1, Math.abs(this.rect.left - this.currentCoordinates.x), Math.abs(this.rect.top - this.currentCoordinates.y));
-    if (Math.abs(this.room.roomPoints[this.room.roomPoints.length - 1].x - this.currentPoint.x) > 0 || Math.abs(this.room.roomPoints[this.room.roomPoints.length - 1].y - this.currentPoint.y) > 0) {
-      this.currentAngle = this.roomService.calculateAngle(this.currentPoint, this.room.roomPoints[this.room.roomPoints.length - 1]);
-      this.currentDistance = this.roomService.calculateDistance(this.currentPoint, this.room.roomPoints[this.room.roomPoints.length - 1]);
+    this.currentPoint = this.createPoint(event);
+    if (Math.abs(this.room.points[this.room.points.length - 1].x - this.currentPoint.x) > 0 || Math.abs(this.room.points[this.room.points.length - 1].y - this.currentPoint.y) > 0) {
+      this.currentAngle = this.roomService.calculateAngle(this.currentPoint, this.room.points[this.room.points.length - 1]);
+      this.currentDistance = this.roomService.calculateDistance(this.currentPoint, this.room.points[this.room.points.length - 1]);
       this.layers[this.layers.length - 1].reset();
       this.context.restore();
       this.context.beginPath();
-      this.context.moveTo(this.room.roomPoints[this.room.roomPoints.length - 1].xPx, this.room.roomPoints[this.room.roomPoints.length - 1].yPx);
+      this.context.moveTo(this.room.points[this.room.points.length - 1].xPx, this.room.points[this.room.points.length - 1].yPx);
       this.context.lineTo(this.currentPoint.xPx, this.currentPoint.yPx);
       this.context.strokeStyle = 'green';
       this.context.lineWidth = 10;
@@ -72,30 +72,29 @@ export class DrawComponent {
 
   @HostListener('mouseup', ['$event'])
   onClick = (event: MouseEvent) => {
-    this.currentCoordinates = {x: event.clientX, y: event.clientY};
-    this.currentPoint = new Point(-1, -1, Math.abs(this.rect.left - this.currentCoordinates.x), Math.abs(this.rect.top - this.currentCoordinates.y));
+    this.currentPoint = this.createPoint(event);
     this.walls.push(this.currentPoint);
     if (this.walls.length === 2) {
-      this.room.roomWalls.push(new Wall(this.currentAngle, this.roomService.calculateDistance(this.walls[0], this.walls[1]), this.walls[0], this.walls[1]));
+      this.room.walls.push(new Wall(this.currentAngle, this.roomService.calculateDistance(this.walls[0], this.walls[1]), this.walls[0], this.walls[1]));
       this.walls[0] = this.walls[1];
       this.walls.pop();
     }
-    if (this.room.roomPoints.length > 0 && this.room.roomPoints[0].x === this.currentPoint.x && this.room.roomPoints[0].y === this.currentPoint.y) {
-      let vertices: number[] = this.room.roomPoints.flatMap(p => [p.x, p.y]);
+    if (this.room.points.length > 0 && this.room.points[0].x === this.currentPoint.x && this.room.points[0].y === this.currentPoint.y) {
+      let vertices: number[] = this.room.points.flatMap(p => [p.x, p.y]);
       let triangles: number[][] = this.roomService.triangulatePolygon(vertices);
-      this.room.roomArea = this.roomService.calculateArea(this.room.roomPoints, triangles);
-      this.room.roomOffPoints = this.roomService.scalePolygon(this.room.roomPoints, 0.3);
-      vertices = this.room.roomOffPoints.flatMap(p => [p.x, p.y]);
+      this.room.area = this.roomService.calculateArea(this.room.points, triangles);
+      this.room.offpoints = this.roomService.scalePolygon(this.room.points, 0.3);
+      vertices = this.room.offpoints.flatMap(p => [p.x, p.y]);
       triangles = this.roomService.triangulatePolygon(vertices);
-      this.room.roomOffArea = this.roomService.calculateArea(this.room.roomOffPoints, triangles);
-      this.room.roomImage = this.getCroppedImage();
-      this.room.roomWalls.forEach((w: Wall) => {
+      this.room.offarea = this.roomService.calculateArea(this.room.offpoints, triangles);
+      this.room.image = this.imageService.getCroppedImage(this.userCanvas, this.context);
+      this.room.walls.forEach((w: Wall) => {
         w.type = w.angle === 0 || w.angle === 180 ? "horizontal" : w.angle === 90 || w.angle === 270 ? "vertical" : "diagonal";
       });
-      this.room.roomWalls.forEach((w1: Wall, index1: number) => {
+      this.room.walls.forEach((w1: Wall, index1: number) => {
         if (!w1.position) {
-          for (let index2 = index1 + 1; index2 < this.room.roomWalls.length; index2++) {
-            const w2: Wall = this.room.roomWalls[index2];
+          for (let index2 = index1 + 1; index2 < this.room.walls.length; index2++) {
+            const w2: Wall = this.room.walls[index2];
             if (!w2.position && w1 !== w2) {
               if (w1.type === "horizontal" && w2.type === "horizontal") {
                 if (w1.points[0].y < w2.points[0].y) {
@@ -137,7 +136,7 @@ export class DrawComponent {
     } else {
       this.isDrawing = true;
     }
-    this.room.addPoint(this.currentPoint);
+    this.room.points.push(this.currentPoint);
     this.layers.push(new Layer(this.userCanvas.nativeElement));
   }
   
@@ -162,11 +161,11 @@ export class DrawComponent {
   }
 
   private clearPoint() {
-    if (this.room.roomPoints.length > 1 && this.layers.length > 1) {
-      this.room.roomPoints.pop();
+    if (this.room.points.length > 1 && this.layers.length > 1) {
+      this.room.points.pop();
       this.layers.pop();
       this.layers[this.layers.length - 1].reset();
-      this.room.roomWalls.pop();
+      this.room.walls.pop();
       this.walls.pop();
     } else {
       this.clearAllPoints();
@@ -174,34 +173,17 @@ export class DrawComponent {
   }
 
   private clearAllPoints() {
-    this.room.roomPoints = [];
+    this.room.points = [];
     while (this.layers.length > 1) this.layers.pop();
     this.layers[0].reset();
     this.isDrawing = false;
-    this.room.roomWalls = [];
+    this.room.walls = [];
     this.walls = [];
   }
 
-  private getCroppedImage(): string {
-    const imageData = this.context.getImageData(0, 0, this.userCanvas.nativeElement.width, this.userCanvas.nativeElement.height);
-    let x1 = this.userCanvas.nativeElement.width, y1 = this.userCanvas.nativeElement.height, x2 = 0, y2 = 0;
-    for (let x = 0; x < this.userCanvas.nativeElement.width; x++) {
-      for (let y = 0; y < this.userCanvas.nativeElement.height; y++) {
-        const index = (y * this.userCanvas.nativeElement.width + x) * 4;
-        if (imageData.data[index + 3] > 0) {
-          x1 = Math.min(x1, x);
-          y1 = Math.min(y1, y);
-          x2 = Math.max(x2, x);
-          y2 = Math.max(y2, y);
-        }
-      }
-    }
-    const croppedCanvas = document.createElement('canvas');
-    const croppedContext = croppedCanvas.getContext('2d')!;
-    croppedCanvas.width = x2 - x1;
-    croppedCanvas.height = y2 - y1;
-    croppedContext.drawImage(this.userCanvas.nativeElement, x1, y1, croppedCanvas.width, croppedCanvas.height, 0, 0, croppedCanvas.width, croppedCanvas.height);
-    return croppedCanvas.toDataURL('image/png');
+  private createPoint(event: MouseEvent): Point {
+    this.currentCoordinates = {x: event.clientX, y: event.clientY};
+    return new Point(-1, -1, Math.abs(this.rect.left - this.currentCoordinates.x), Math.abs(this.rect.top - this.currentCoordinates.y));
   }
 
   private getGrid(cellWidth: number, cellHeight: number): void {

@@ -4,12 +4,18 @@ from bson import ObjectId
 from fastapi import APIRouter, Query
 from db.database import get_database
 from models.combos import Combo
-from models.equipment import Equipment, Pipe
+from models.equipment import Equipment, MountingBox, Pipe, ThermoController
 from models.room import Room
 
 
 router = APIRouter()
 db = get_database()
+
+@router.get("/boxes", response_model=List[MountingBox])
+async def get_boxes():
+    collection = db.boxes
+    boxes = collection.find()
+    return [b for b in boxes]
 
 @router.get("/equipment", response_model=Equipment)
 async def get_equipment():
@@ -37,7 +43,12 @@ async def get_combos(r: str = Query(None)):
                 for c in combinations(pipes, i):
                     length = sum(pipe.length for pipe in c)
                     power = sum(pipe.power for pipe in c) / area
-                    print(power)
-                    if 100 <= power < 200: combos.append(Combo(length=length, pipes=c, power=power))
+                    if 100 <= power < 200: combos.append(Combo(length=length, pipes=c, power=round(power)))
             combos = sorted(combos, key=lambda x: sum(pipe.price for pipe in x.pipes))
     return combos
+
+@router.get("/thermocontrollers", response_model=List[ThermoController])
+async def get_thermocontrollers():
+    collection = db.thermocontrollers
+    thermocontrollers = collection.find()
+    return [t for t in thermocontrollers]

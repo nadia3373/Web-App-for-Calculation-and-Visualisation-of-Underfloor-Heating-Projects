@@ -1,20 +1,20 @@
 export class PipeLayout {
-    private width: number;
-    private height: number;
-    private loops: number;
-    private offset: number = 0;
-    private diameter: number = 0;
-    private arcLength: number = 0;
+    public width: number;
+    public height: number;
+    public loops: number;
+    public offset: number = 0;
+    public diameter: number = 0;
+    public arcLength: number = 0;
 
-    private innerLines: number = 0;
-    private outerLines: number = 0;
-    private arcs: number = 0;
-    private corners: number = 0;
-    private closingLine: number = 0;
+    public innerLines: number = 0;
+    public outerLines: number = 0;
+    public arcs: number = 0;
+    public corners: number = 0;
+    public closingLine: number = 0;
 
-    private pipeLength: number;
-    private totalLength: number = 0;
-    private difference: number = 0;
+    public pipeLength: number;
+    public totalLength: number = 0;
+    public difference: number = 0;
 
     constructor(pipeLength: number = 0, width: number = 0, height: number = 0, loops: number = 0) {
         this.pipeLength = pipeLength;
@@ -31,42 +31,6 @@ export class PipeLayout {
         this.closingLine = this.width - this.diameter;
         this.totalLength = this.innerLines + this.outerLines + this.arcs + this.corners + this.closingLine;
         this.difference = this.totalLength - this.pipeLength;
-    }
-
-    public get d(): number {
-        return this.diameter;
-    }
-
-    public get diff(): number {
-        return this.difference;
-    }
-
-    public get h(): number {
-        return this.height;
-    }
-
-    public get closing(): number {
-        return this.closingLine;
-    }
-
-    public get inner(): number {
-        return this.innerLines;
-    }
-
-    public get off(): number {
-        return this.offset;
-    }
-
-    public get outer(): number {
-        return this.outerLines;
-    }
-
-    public get l(): number {
-        return this.loops;
-    }
-
-    public get w(): number {
-        return this.width;
     }
 
     public toString() {

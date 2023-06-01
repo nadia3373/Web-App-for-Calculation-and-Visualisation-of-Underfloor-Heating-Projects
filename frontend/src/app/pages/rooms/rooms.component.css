@@ -1,0 +1,33 @@
+button {
+    padding: 8px 16px;
+    font-size: 14px;
+    border-radius: 4px;
+    border: none;
+    background-color: #f5f5f5;
+    color: #1976d2;
+    cursor: pointer;
+    width: 100%;
+}
+
+button:hover {
+    color: #fff;
+    background-color: #1976d2;
+}
+
+table {
+    border-collapse: collapse;
+    margin-top: 10px;
+    width: 100%;
+}
+
+th {
+    font-weight: bold;
+}
+
+th, td {
+    padding: 15px;
+}
+
+tr:not(:first-child):hover {
+    background-color: #f5f5f5;
+}

@@ -1,7 +1,7 @@
 export class Layer {
-    private canvas: HTMLCanvasElement;
-    private ctx: CanvasRenderingContext2D;
-    private savedState: ImageData;
+    public canvas: HTMLCanvasElement;
+    public ctx: CanvasRenderingContext2D;
+    public savedState: ImageData;
   
     constructor(canvas: HTMLCanvasElement) {
       this.canvas = canvas;
@@ -12,4 +12,4 @@ export class Layer {
     public reset(): void {
       this.ctx.putImageData(this.savedState, 0, 0);
     }
-}  
+}

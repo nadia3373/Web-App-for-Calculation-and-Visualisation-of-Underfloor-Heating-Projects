@@ -1,8 +1,8 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import * as earcut from 'earcut';
-import { Point } from 'src/app/pages/draw/point.model';
-import { Wall } from 'src/app/pages/draw/wall.model';
+import { Point } from '../../models/point.model';
+import { Wall } from '../../models/wall.model';
 
 @Injectable({
   providedIn: 'root'

@@ -1,4 +1,3 @@
-import { RoomService } from "src/app/services/room/room.service";
 import { Point } from "./point.model";
 
 export class Wall {

@@ -1,14 +1,12 @@
-import ObjectId from 'bson-objectid';
-
 export class Pipe {
-    private id: ObjectId;
-    private length: number;
-    private model: string;
-    private oc: number;
-    private power: number;
-    private price: number;
+    public id: string;
+    public length: number;
+    public model: string;
+    public oc: number;
+    public power: number;
+    public price: number;
 
-    constructor(id: ObjectId = new ObjectId(), length: number,
+    constructor(id: string = '', length: number,
     model: string= '', oc: number, power: number, price: number = 0) {
         this.id = id;
         this.length = length;
@@ -16,18 +14,6 @@ export class Pipe {
         this.oc = oc;
         this.power = power;
         this.price = price;
-    }
-
-    public get getLength(): number {
-        return this.length;
-    }
-
-    public get getModel(): string {
-        return this.model;
-    }
-    
-    public get getPrice(): number {
-        return this.price;
     }
 
     public toString(): string {

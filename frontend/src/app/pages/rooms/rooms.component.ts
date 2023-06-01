@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { Room } from '../draw/room.model';
+import { Room } from '../../models/room.model';
 import { ApiService } from 'src/app/services/api-service/api.service';
 
 @Component({
@@ -14,10 +14,11 @@ export class RoomsComponent implements OnInit {
 
   ngOnInit(): void {
     this.apiService.getRooms().subscribe({
-      next: (rooms: Room[]) => {
+      next: (rooms) => {
         this.rooms = rooms;
       },
-      error: (error) => console.error(error)
+      error: (error) => {
+      }
     });
   }
 

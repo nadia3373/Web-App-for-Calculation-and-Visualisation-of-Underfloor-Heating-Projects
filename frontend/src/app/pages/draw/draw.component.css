@@ -5,6 +5,12 @@
     height: 2001px;
 }
 
+.canvas-container {
+    position: relative;
+    display: flex;
+    justify-content: center;
+}
+
 .info {
     position: absolute;
     background-color: white;
