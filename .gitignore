@@ -7,6 +7,7 @@
 /bazel-out
 
 # Node
+frontend/.angular/
 frontend/node_modules/
 frontend/npm-debug.log
 frontend/yarn-error.log
