@@ -30,8 +30,6 @@ thermocontrollers = [ThermoController(id=str(ObjectId()), model="РТС-1", pric
                      ThermoController(id=str(ObjectId()), model="РТС-3", price=3900),
                      ThermoController(id=str(ObjectId()), model="РТС-4", price=4600)]
 
-# db.equipment.insert_many([mounting_box.dict()] + [pipe.dict() for pipe in pipes] + [tc.dict() for tc in thermocontrollers])
-
 if db.boxes.find_one({"model": "ЖК-159"}) is None:
     print("Монтажная коробка добавлена")
     db.boxes.insert_one(mounting_box.dict())

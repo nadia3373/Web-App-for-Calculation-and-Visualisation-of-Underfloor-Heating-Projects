@@ -1,13 +1,8 @@
-FROM tiangolo/uvicorn-gunicorn-fastapi:python3.9
+FROM tiangolo/uvicorn-gunicorn-fastapi:python3.11-slim
 
-COPY requirements.txt .
+COPY . /
 
-RUN pip install --no-cache-dir -r requirements.txt
-
-COPY ./app /app
-COPY ./init_db.py /init_db.py
-COPY ./start.sh /start.sh
-
-RUN chmod +x /start.sh
+RUN chmod +x /start.sh && \
+    pip install --no-cache-dir -r /requirements.txt
 
 CMD ["/start.sh"]

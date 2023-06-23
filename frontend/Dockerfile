@@ -1,17 +1,14 @@
-FROM node:latest AS build
+FROM node:current-slim AS build
 
 WORKDIR /usr/src/app
 
-COPY package.json package-lock.json ./
-
-RUN npm install
-
 COPY . .
 
-RUN npm run build
+RUN npm install && \
+    npm run build
 
-FROM nginx:1.21.1-alpine
+FROM nginx:stable-alpine-slim
 
-COPY nginx.conf /etc/nginx/nginx.conf
+COPY --from=build /usr/src/app/nginx.conf /etc/nginx/nginx.conf
 
 COPY --from=build /usr/src/app/dist/frontend /usr/share/nginx/html
